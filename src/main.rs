@@ -8,9 +8,11 @@ use game::Game;
 use player::Player;
 
 fn main() {
-    let _game = Game::new(vec![
+    let game = Game::new(vec![
         Player::new(String::from("Teo")),
         Player::new(String::from("Gabriella")),
         Player::new(String::from("Peenz")),
     ]);
+
+    game.draw();
 }

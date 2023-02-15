@@ -8,6 +8,19 @@ pub enum Resource {
     Sheep,
 }
 
+impl Clone for Resource {
+    fn clone(&self) -> Resource {
+        match self {
+            Resource::Wood => Resource::Wood,
+            Resource::Ore => Resource::Ore,
+            Resource::Brick => Resource::Brick,
+            Resource::Wheat => Resource::Wheat,
+            Resource::Desert => Resource::Desert,
+            Resource::Sheep => Resource::Sheep,
+        }
+    }
+}
+
 pub struct Resources {
     pub wood: u8,
     pub ore: u8,

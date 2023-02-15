@@ -32,6 +32,10 @@ impl Game {
         }
     }
 
+    pub fn draw(&self) {
+        self.board.draw();
+    }
+
     pub fn roll() -> u8 {
         let mut rng = rand::thread_rng();
         let roll = rng.gen_range(1..=6) + rng.gen_range(1..=6);
@@ -41,13 +45,12 @@ impl Game {
     pub fn process_roll(&mut self, roll: u8, player: Player) {
         match roll {
             7 => {
-                // [TODO]: make user move the robber 
+                // [TODO]: make user move the robber
                 unimplemented!();
             }
             _ => {
                 // [TODO]: make user choose which resource to take
                 unimplemented!();
-
             }
         }
     }

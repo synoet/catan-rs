@@ -1,35 +1,20 @@
+use crate::player::Player;
 use crate::resource::{Resource, Resources};
-use std::iter;
-use crate::tile::Tile;
+use crate::tile::{Tile, Vertex};
 use rand::Rng;
+use std::collections::HashMap;
+
 pub struct Board {
     tiles: Vec<Tile>,
-    vertexes: Vec<Vertex>,
-    edges: Vec<Edge>,
-    map: Vec<Vec<Option<Vertex>>>,
+    spots: Vec<Spot>,
 }
 
-pub struct Vertex {
+#[derive(Debug, Clone)]
+pub struct Spot {
     pub x: usize,
     pub y: usize,
-}
-
-impl Vertex {
-    pub fn new(x: usize, y: usize) -> Vertex {
-        Vertex { x, y }
-    }
-}
-
-impl Clone for Vertex {
-    fn clone(&self) -> Vertex {
-        Vertex {
-            x: self.x,
-            y: self.y,
-        }
-    }
-}
-pub struct Edge {
-    pub vertexes: Vec<Vertex>,
+    pub tiles: Vec<Tile>,
+    pub neighbors: Vec<Spot>,
 }
 
 impl Board {
@@ -41,87 +26,130 @@ impl Board {
         let mut num_resources_map =
             vec![0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5];
 
-        for _ in 0..18 {
-            let resource: Resource = Resource::from_number(
-                num_resources_map.remove(rng.gen_range(0..num_resources_map.len())),
-            );
-            let number: Option<u8> = match resource {
-                Resource::Desert => None,
-                _ => Some(possible_numbers.remove(rng.gen_range(0..possible_numbers.len()))),
-            };
+        let tile_top_vertices_indexes: Vec<Vec<usize>> = vec![
+            vec![4, 6, 8],
+            vec![3, 5, 7, 9],
+            vec![2, 4, 6, 8, 10],
+            vec![3, 5, 7, 9],
+            vec![4, 6, 8],
+        ];
 
-            tiles.push(Tile { resource, number });
-        }
+        for i in 0..5 {
+            for j in 0..tile_top_vertices_indexes[i].len() {
+                let resource: Resource = Resource::from_number(
+                    num_resources_map.remove(rng.gen_range(0..num_resources_map.len())),
+                );
+                let number: Option<u8> = match resource {
+                    Resource::Desert => None,
+                    _ => Some(possible_numbers.remove(rng.gen_range(0..possible_numbers.len()))),
+                };
 
-        let mut map = vec![vec![None; 16]; 11];
+                let current_row = i * 3;
 
-
-        let mut initial_vertex_column_positions: Vec<usize> = vec![3, 5, 8];
-
-
-        for x in 0..11 {
-            for vertex in initial_vertex_column_positions.iter() {
-                map[x][*vertex] = Some(Vertex::new(x, *vertex));
+                tiles.push(Tile {
+                    resource,
+                    number,
+                    vertexes: vec![
+                        // Top vertex
+                        Vertex {
+                            x: tile_top_vertices_indexes[i][j],
+                            y: current_row,
+                        },
+                        // Top Left Vertex
+                        Vertex {
+                            x: tile_top_vertices_indexes[i][j] - 1,
+                            y: current_row + 1,
+                        },
+                        // Bottom Left Vertex
+                        Vertex {
+                            x: tile_top_vertices_indexes[i][j] - 1,
+                            y: current_row + 2,
+                        },
+                        // Bottom Vertex
+                        Vertex {
+                            x: tile_top_vertices_indexes[i][j],
+                            y: current_row + 3,
+                        },
+                        // Top Right vertex
+                        Vertex {
+                            x: tile_top_vertices_indexes[i][j] + 1,
+                            y: current_row + 1,
+                        },
+                        // Top Right vertex
+                        Vertex {
+                            x: tile_top_vertices_indexes[i][j] + 1,
+                            y: current_row + 2,
+                        },
+                    ],
+                });
             }
         }
 
+        let mut all_vertexes: HashMap<String, Vertex> = HashMap::new();
 
+        for tile in &tiles {
+            for vertex in &tile.vertexes {
+                if !all_vertexes.contains_key(&vertex.to_string()) {
+                    all_vertexes.insert(vertex.to_string(), vertex.clone());
+                }
+            }
+        }
 
-        !unimplemented!();
+        let mut spots: Vec<Spot> = vec![];
+
+        for (key, vertex) in all_vertexes {
+            let mut touching_tiles: Vec<Tile> = vec![];
+            for tile in &tiles {
+                for tile_vertex in &tile.vertexes {
+                    if tile_vertex.to_string() == key {
+                        touching_tiles.push(tile.clone());
+                    }
+                }
+            }
+
+            spots.push(Spot {
+                x: vertex.x,
+                y: vertex.y,
+                tiles: touching_tiles,
+                neighbors: vec![],
+            });
+        }
+
+        for spot in &spots {
+            for possible_neighbor in &spots {
+                if possible_neighbor.x >= spot.x - 1
+                    && possible_neighbor.x <= spot.x + 1
+                    && possible_neighbor.y >= spot.y - 1
+                    && possible_neighbor.y <= spot.y + 1
+                {
+                    if possible_neighbor.x != spot.x || possible_neighbor.y != spot.y {
+                        spot.neighbors.push(possible_neighbor.clone());
+                    }
+                }
+            }
+        }
+
+        Board { tiles, spots }
     }
 
-    pub fn place_settlement(&mut self, player: u8, tiles: Vec<Tile>) {
+    pub fn draw(&self) {
+        let mut map = vec![vec!["___"; 12]; 16];
 
-
-
-
-
-        
-    }
-
-
-    fn print(&self) {
-        for i in 0..2 {
-            print!(
-                "{:?}-{}  ",
-                self.tiles[i].resource,
-                self.tiles[i].number.unwrap_or(0)
-            );
-        }
-        println!("");
-        for i in 2..6 {
-            print!(
-                "{:?}-{}  ",
-                self.tiles[i].resource,
-                self.tiles[i].number.unwrap_or(0)
-            );
+        for tile in &self.tiles {
+            println!("{:?}", tile);
         }
 
-        println!("");
-        for i in 6..11 {
-            print!(
-                "{:?}-{}  ",
-                self.tiles[i].resource,
-                self.tiles[i].number.unwrap_or(0)
-            );
+        for tile in &self.tiles {
+            for vertex in &tile.vertexes {
+                map[vertex.y][vertex.x] = " x ";
+            }
         }
 
-        println!("");
-        for i in 11..15 {
-            print!(
-                "{:?}-{}  ",
-                self.tiles[i].resource,
-                self.tiles[i].number.unwrap_or(0)
-            );
-        }
-
-        println!("");
-        for i in 15..18 {
-            print!(
-                "{:?}-{}  ",
-                self.tiles[i].resource,
-                self.tiles[i].number.unwrap_or(0)
-            );
+        for row in map {
+            for col in row {
+                print!("{} ", col);
+            }
+            println!("");
         }
     }
 }
