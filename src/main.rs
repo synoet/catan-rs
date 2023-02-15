@@ -14,5 +14,4 @@ fn main() {
         Player::new(String::from("Peenz")),
     ]);
 
-    game.draw();
 }

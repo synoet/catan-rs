@@ -5,8 +5,8 @@ use rand::Rng;
 use std::collections::HashMap;
 
 pub struct Board {
-    tiles: Vec<Tile>,
-    spots: Vec<Spot>,
+    pub tiles: Vec<Tile>,
+    pub spots: Vec<Spot>,
 }
 
 #[derive(Debug, Clone)]
@@ -115,16 +115,15 @@ impl Board {
             });
         }
 
-        for spot in &spots {
-            for possible_neighbor in &spots {
+        let searchable_spots = spots.clone();
+        for spot in spots.iter_mut() {
+            for possible_neighbor in &searchable_spots {
                 if possible_neighbor.x >= spot.x - 1
                     && possible_neighbor.x <= spot.x + 1
                     && possible_neighbor.y >= spot.y - 1
                     && possible_neighbor.y <= spot.y + 1
                 {
-                    if possible_neighbor.x != spot.x || possible_neighbor.y != spot.y {
-                        spot.neighbors.push(possible_neighbor.clone());
-                    }
+                    spot.neighbors.push(possible_neighbor.clone());
                 }
             }
         }
